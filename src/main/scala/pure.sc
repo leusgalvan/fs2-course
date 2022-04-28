@@ -25,6 +25,15 @@ def lettersUnfold: Stream[Pure, Char] =
   Stream
       .unfold('a')(c => if(c == 'z' + 1) None else Some((c, (c+1).toChar)))
 
+// Exercise #3
+def myIterate[A](initial: A)(next: A => A): Stream[Pure, A] = {
+  Stream.unfold(initial)(a => Some((a, next(a))))
+}
+
 lettersIter.compile.toList
 lettersUnfold.compile.toList
+myIterate('a')(c => (c + 1).toChar)
+  .take(26)
+  .compile
+  .toList
 
