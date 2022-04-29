@@ -1,12 +1,15 @@
-import java.io.{BufferedReader, FileReader, Reader}
+package pure
+
+import java.io.{BufferedReader, FileReader}
 import java.nio.file.{Paths, Files => JFiles}
 
-import scala.jdk.CollectionConverters._
 import cats.effect.{IO, IOApp}
-import fs2.io.file.{Files, Path}
 import fs2._
+import fs2.io.file.{Files, Path}
+
 import scala.collection.mutable.ListBuffer
-import scala.io.{Source, StdIn}
+import scala.io.Source
+import scala.jdk.CollectionConverters._
 import scala.util.{Try, Using}
 
 object CSVProcessing extends IOApp.Simple {

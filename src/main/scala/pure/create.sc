@@ -30,10 +30,9 @@ def myIterate[A](initial: A)(next: A => A): Stream[Pure, A] = {
   Stream.unfold(initial)(a => Some((a, next(a))))
 }
 
-lettersIter.compile.toList
-lettersUnfold.compile.toList
+lettersIter.toList
+lettersUnfold.toList
 myIterate('a')(c => (c + 1).toChar)
   .take(26)
-  .compile
   .toList
 
