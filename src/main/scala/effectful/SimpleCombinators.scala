@@ -16,16 +16,22 @@ object SimpleCombinators extends IOApp.Simple {
       } yield p
     sample.take(2).compile.toList.flatMap(IO.println)
 
-    val concat = Stream.exec(IO.println("Starting")) ++ Stream(1,2,3) ++ Stream.exec(IO.println("Finishing"))
-    concat.compile.toList.flatMap(IO.println)
+    val printed = Stream(1, 2, 3).evalMap(IO.println)
+    printed.compile.drain
 
-    val delayed = Stream.sleep_[IO](1.second) ++ Stream.eval(IO.println("Emit"))
-    delayed.compile.drain
+    val filterByFlippingCoin = Stream.range(1, 1000).evalFilter(_ => IO(math.random() < 0.5))
+    filterByFlippingCoin.compile.toList.flatMap(IO.println)
 
-    // Exercise
-    def evalEvery[A](d: FiniteDuration)(fa: IO[A]): Stream[IO, A] = {
-      (Stream.sleep_[IO](d) ++ Stream.eval(fa)).repeat
-    }
-    evalEvery(2.seconds)(IO.println("Hi").as(42)).take(10).compile.toList.flatMap(IO.println)
+//    val concat = Stream.exec(IO.println("Starting")) ++ Stream(1,2,3) ++ Stream.exec(IO.println("Finishing"))
+//    concat.compile.toList.flatMap(IO.println)
+//
+//    val delayed = Stream.sleep_[IO](1.second) ++ Stream.eval(IO.println("Emit"))
+//    delayed.compile.drain
+//
+//    // Exercise
+//    def evalEvery[A](d: FiniteDuration)(fa: IO[A]): Stream[IO, A] = {
+//      (Stream.sleep_[IO](d) ++ Stream.eval(fa)).repeat
+//    }
+//    evalEvery(2.seconds)(IO.println("Hi").as(42)).take(10).compile.toList.flatMap(IO.println)
   }
 }
