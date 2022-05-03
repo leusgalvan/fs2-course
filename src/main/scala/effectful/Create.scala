@@ -1,5 +1,7 @@
 package effectful
 
+import java.time.{LocalDate, Month}
+
 import fs2._
 import cats.effect._
 
@@ -41,7 +43,27 @@ object Create extends IOApp.Simple {
     }
     alphabet.compile.toList.flatMap(IO.println)
 
-    val neverEnding = Stream.never[IO]
+    val neverEnding: Stream[IO, Nothing] = Stream.never[IO]
     neverEnding.interruptAfter(2.seconds).compile.drain
+
+    // Exercise
+    val data = List.range(1, 100)
+    val pageSize = 20
+
+    def fetchPage(pageNumber: Int): IO[List[Int]] = {
+      val start = pageNumber * pageSize
+      val end = start + pageSize
+      IO.println(s"Fetching page $pageNumber").as(data.slice(start, end))
+    }
+
+    def fetchAll(): Stream[IO, Int] = {
+      Stream.unfoldEval(0) { pageNumber =>
+        fetchPage(pageNumber).map { pageElems =>
+          if(pageElems.isEmpty) None
+          else Some((Stream.emits(pageElems), pageNumber + 1))
+        }
+      }.flatten
+    }
+    fetchAll().take(25).compile.toList.flatMap(IO.println)
   }
 }
