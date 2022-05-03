@@ -13,6 +13,7 @@ val s6 = Stream.unfold(1)(i => if(i % 7 == 0) None else Some((i, i + 5)))
 
 val nats = Stream.iterate(1)(_ + 1)
 val answerToEverything = Stream.constant(42)
+val range = Stream.range(1, 50)
 
 // Exercise #1
 def lettersIter: Stream[Pure, Char] =
