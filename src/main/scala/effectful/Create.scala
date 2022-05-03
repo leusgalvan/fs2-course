@@ -28,7 +28,7 @@ object Create extends IOApp.Simple {
     val fromPure: Stream[IO, Int] = Stream(1,2,3).covary[IO]
     fromPure.compile.toList.flatMap(IO.println)
 
-    val randomInts = Stream.repeatEval(IO(Random.nextInt()))
+    val randomInts = Stream.repeatEval(IO(Random.nextInt())) // Stream.eval(IO(Random.nextInt())).repeat
     randomInts.take(10).compile.toList.flatMap(IO.println)
 
     val fromFoldable = Stream.evals(IO(List(1,2,3)))
