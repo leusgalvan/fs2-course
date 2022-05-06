@@ -19,6 +19,9 @@ object SimpleCombinators extends IOApp.Simple {
     val printed = Stream(1, 2, 3).evalMap(IO.println)
     printed.compile.drain
 
+    val logged = Stream(1, 2, 3).evalTap(IO.println)
+    printed.compile.toList.flatMap(IO.println)
+    
     val filterByFlippingCoin = Stream.range(1, 1000).evalFilter(_ => IO(math.random() < 0.5))
     filterByFlippingCoin.compile.toList.flatMap(IO.println)
 
