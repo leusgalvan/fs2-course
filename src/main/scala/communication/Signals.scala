@@ -7,7 +7,7 @@ import fs2.concurrent._
 import scala.concurrent.duration._
 import scala.util.Random
 
-object Signal extends IOApp.Simple {
+object Signals extends IOApp.Simple {
   override def run: IO[Unit] = {
     // Boolean signal
     def signaller(signal: SignallingRef[IO, Boolean]): Stream[IO, Nothing] = {
