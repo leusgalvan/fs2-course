@@ -9,6 +9,15 @@ import scala.util.Random
 
 object Topics extends IOApp.Simple {
   override def run: IO[Unit] = {
+    Topic[IO, Int].flatMap { topic =>
+      val oneP = Stream.range(1, 10).through(topic.publish).drain
+      //val slowP = Stream.iterate(1)(_ + 1).covary[IO].metered(100.millis).through(topic.publish).drain
+      val fastP = Stream.iterate(1)(_ + 1).covary[IO].through(topic.publish).drain
+      val slowC = topic.subscribe(0).evalMap(i => IO.sleep(300.millis) *> IO.println(s"Slowly read $i")).drain
+      val fastC = topic.subscribe(10).evalMap(i => IO.println(s"Quickly read $i")).drain
+      Stream(fastC, slowC, oneP).parJoinUnbounded.interruptAfter(2.seconds).compile.drain
+    }
+
     case class CarPosition(carId: Long, lat: Double, lng: Double)
 
     def createCar(carId: Long, topic: Topic[IO, CarPosition]): Stream[IO, Nothing] = {

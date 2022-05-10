@@ -30,6 +30,12 @@ object Signals extends IOApp.Simple {
       worker(signal).concurrently(signaller(signal))
     }.compile.drain
 
+    SignallingRef[IO, Int](0).flatMap { signal =>
+      val p = Stream.iterate(1)(_ + 1).covary[IO].metered(100.millis).evalMap(signal.set).drain
+      val c = signal.discrete.evalMap(i => IO.println(s"Read $i")).drain
+      c.concurrently(p).interruptAfter(3.seconds).compile.drain
+    }
+    
     // Double signal
     type Temperature = Double
 
