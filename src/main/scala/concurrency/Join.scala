@@ -29,16 +29,20 @@ object Join extends IOApp.Simple {
     jBounded2.printlns.interruptAfter(5.seconds).compile.drain
 
     // Exercise
-    def producer(queue: Queue[IO, Int]): Stream[IO, Nothing] =
-      Stream.repeatEval(IO(Random.between(1, 1000)).flatMap(queue.offer)).drain
+    def producer(id: Int, queue: Queue[IO, Int]): Stream[IO, Nothing] =
+      Stream.repeatEval(queue.offer(id)).drain
 
-    def consumer(queue: Queue[IO, Int]): Stream[IO, Nothing] =
-      Stream.repeatEval(queue.take).map(_ * 2).printlns
+    def consumer(id: Int, queue: Queue[IO, Int]): Stream[IO, Nothing] =
+      Stream.repeatEval(queue.take).map(i => s"Consuming message $i from consumer $id").printlns
 
+    // Create a stream that emits a queue
+    // Use that queue to create 5 producers and 10 consumers with sequential ids
+    // Run the producers and the consumers in parallel
+    // Finish after 5 seconds
     Stream.eval(Queue.unbounded[IO, Int]).flatMap { queue =>
-      val p = producer(queue)
-      val cs = Stream.constant(consumer(queue)).take(10)
-      val all = Stream(p) ++ cs
+      val ps = Stream.range(0, 5).map(id => producer(id, queue))
+      val cs = Stream.range(0, 10).map(id => consumer(id, queue))
+      val all = ps ++ cs
       all.parJoinUnbounded
     }.interruptAfter(5.seconds).compile.drain
   }
