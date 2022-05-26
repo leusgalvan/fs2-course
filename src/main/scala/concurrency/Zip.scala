@@ -1,10 +1,9 @@
 package concurrency
 
-import java.time.{LocalDate, LocalDateTime}
-
 import fs2._
 import cats.effect._
 
+import java.time.LocalDateTime
 import scala.concurrent.duration._
 
 object Zip extends IOApp.Simple {
@@ -12,24 +11,23 @@ object Zip extends IOApp.Simple {
     val s1 = Stream(1, 2, 3).covary[IO].metered(1.second)
     val s2 = Stream(4, 5, 6, 7).covary[IO].metered(100.millis)
     s1.zip(s2).printlns.compile.drain
-    (s1 ++ Stream.raiseError[IO](new Exception("boom"))).zip(s2).printlns.compile.drain
-    (s1.take(1) ++ Stream.raiseError[IO](new Exception("boom"))).zip(s2).printlns.compile.drain
 
-    val s3 = Stream.repeatEval(IO(LocalDateTime.now())).evalTap(IO.println).metered(1.second)
-    s3.interruptAfter(4.seconds).compile.drain
+    val s2Inf = Stream.iterate(0)(_ + 1).covary[IO].metered(200.millis)
+    s1.zip(s2Inf).printlns.compile.drain
 
-    val s4 = Stream.iterate(1)(_ + 1).covary[IO]
-    s3.zipRight(s4).interruptAfter(5.seconds).compile.toList.flatMap(IO.println)
+    val s1Failing = s1 ++ Stream.raiseError[IO](new Exception("s1 failed"))
+    s1Failing.zip(s2).printlns.compile.drain
 
-    // Exercise #1: explain why
-    val s5 = Stream.repeatEval(IO(LocalDateTime.now())).metered(1.second).printlns
-    s3.zipRight(s5).interruptAfter(5.seconds).compile.toList.flatMap(IO.println)
+    val s2Failing = s2 ++ Stream.raiseError[IO](new Exception("s2 failed"))
+    s1.zip(s2Failing).printlns.compile.drain
+    s1.zip(s2).compile.toList.flatMap(IO.println)
 
-    // Exercise #2: explain what happens
-    val s6 = Stream.repeatEval(IO.println("Pulling left"))
-    val s7 = Stream.repeatEval(IO.println("Pulling right"))
-    s6.zip(s7).interruptAfter(5.seconds).compile.drain
+    val s3 = Stream.repeatEval(IO(LocalDateTime.now)).evalTap(IO.println).metered(1.second)
+    s3.zipRight(s2Inf).interruptAfter(3.seconds).compile.toList.flatMap(IO.println)
 
-    s6.parZip(s7).interruptAfter(5.seconds).compile.drain
+    val s4 = Stream.iterateEval(0)(i => IO.println(s"Pulling left $i").as(i + 1))
+    val s5 = Stream.iterateEval(0)(i => IO.println(s"Pulling right $i").as(i + 1))
+    s4.zip(s5).take(15).compile.toList.flatMap(IO.println)
+    s4.parZip(s5).take(15).compile.toList.flatMap(IO.println)
   }
 }

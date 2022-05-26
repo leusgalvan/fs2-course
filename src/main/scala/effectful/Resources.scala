@@ -7,22 +7,21 @@ import cats.effect._
 
 object Resources extends IOApp.Simple {
   override def run: IO[Unit] = {
-    //val r = Resource.fromAutoCloseable(IO.blocking(new BufferedReader(new FileReader("sets.csv"))))
     val acquireReader = IO.blocking(new BufferedReader(new FileReader("sets.csv")))
-    val releaseReader = (reader: BufferedReader) => IO.println("Releasing...") *> IO.blocking(reader.close())
+    val releaseReader = (reader: BufferedReader) => IO.println("Releasing") *> IO.blocking(reader.close())
 
-    // Exercise
-    val readLines = (reader: BufferedReader) => {
+    def readLines(reader: BufferedReader): Stream[IO, String] = {
       Stream
         .repeatEval(IO.blocking(reader.readLine()))
         .takeWhile(_ != null)
-      //Stream.raiseError[IO](new Exception("boom"))
+      // Stream.raiseError[IO](new Exception("boom"))
     }
 
+    val readerResource: Resource[IO, BufferedReader] = Resource.make(acquireReader)(releaseReader)
+
     Stream
-      //.bracket(acquireReader)(releaseReader)
-      //.fromAutoCloseable(acquireReader)
-      .resource(Resource.make(acquireReader)(releaseReader))
+      .fromAutoCloseable(acquireReader)
+      //.resource(readerResource)
       .flatMap(readLines)
       .take(10)
       .printlns
