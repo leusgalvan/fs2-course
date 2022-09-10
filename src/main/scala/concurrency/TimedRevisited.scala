@@ -10,7 +10,7 @@ import scala.util.Random
 
 object TimedRevisited extends IOApp.Simple {
   override def run: IO[Unit] = {
-    val format = DateTimeFormatter.ofPattern("hh:MM:ss")
+    val format = DateTimeFormatter.ofPattern("hh:mm:ss")
     def printNow: IO[Unit] = IO.println(LocalDateTime.now().format(format))
     def randomResult: IO[Int] = IO(Random.between(1, 1000))
     def process(executionTime: FiniteDuration): IO[Int] = {
